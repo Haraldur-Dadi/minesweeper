@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>Axios example</title>
+    <meta charset="UTF-8">
+
+    <!-- We need to import Axios in order to be able to use the axios object below -->
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+</head>
+
+<body>
+    <h1>Axios example</h1>
+    <p>In this example, we perform a POST request to "http://someinvaliddomain.is" with a parameter called "myParam" in
+        the body and print the output to the console. You are free to adapt this example to your needs in Project 2. The
+        request will fail, since the domain does not exist/does not answer our request.</p>
+    <br>
+    <!-- Clicking this button calls doAjax(), which will do an AJAX request -->
+    <button type="button" onclick="doAjax()">Click to do AJAX</button>
+
+    <script>
+        function doAjax() {
+            //Prepare the parameter value for 'myParam'
+            //var paramValue = "someValue";
+
+            //The URL to which we will send the request
+            var url = 'https://veff213-minesweeper.herokuapp.com/api/v1/minesweeper';
+
+            //Perform an AJAX POST request to the url, and set the param 'myParam' in the request body to paramValue
+            axios.post(url, { myParam: 5, myParam2: 5, myparam3: 3 })
+                .then(function (result) {
+                    //When successful, print 'Success: ' and the received data
+                    console.log("Success: ", result.data.board.rows);
+                })
+                .catch(function (error) {
+                    //When unsuccessful, print the error.
+                    console.log(error);
+                })
+                .then(function () {
+                    // This code is always executed, independent of whether the request succeeds or fails.
+                });
+        }
+    </script>
+</body>
+
+</html>

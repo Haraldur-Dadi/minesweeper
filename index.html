@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <title>Minesweeper</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" type="text/css" href="sweepminerstyle.css">
+        <script type="text/javascript" src="sweepminerscript.js"></script>
+        <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    </head>
+    <body>
+        <form>
+            <label for="rows_input">Rows: </label>
+            <input type="text" id="rows_input" name="rows_input" value="1">
+            <label for="cols_input">Columns: </label>
+            <input type="text" id="cols_input" name="cols_input" value="1">
+            <label for="mines_input">Bombs: </label>
+            <input type="text" id="mines_input" name="mines_input" value="1">
+            <button type="button" id="generate_button">Generate</button>
+        </form>
+
+        <main id="board">
+            
+        </main>
+
+    </body>
+</html>
