@@ -1,13 +1,19 @@
 body { 
-    margin: 2em;
+    margin: 2em 0;
     text-align: center;
 }
 
+main {
+    position: relative;
+    margin-top: 2em;
+}
+
 #display_board {
+    margin: 0;
     position: absolute;
-    top: 10%;
+    top: 50%;
     left: 50%;
-    transform: translate(-50%, -10%);
+    transform: translate(-50%, -50%);
 
     display: grid;
     grid-template-columns: repeat(1, 40px);
