@@ -90,7 +90,7 @@ function print_board() {
         }
     }
 
-    main = document.getElementById("main");
+    var main = document.getElementById("main");
     main.style.height = 40 * cols_nr + 'px';
     
     assign_mines();
@@ -108,27 +108,31 @@ function display_mine(button) {
     // Display mine
     button.disabled = true;
 
+    // Clear innerhtml if button was already flagged
+    button.innerHTML = "";
+
     var mine_img = document.createElement("img");
     mine_img.src = "bomb.png";
-
     button.style.background = "tomato";
     button.appendChild(mine_img);
 }
 
 function display_flag() {
-    if (event.target.getAttribute("flag") == null) {
-        var flag_img = document.createElement("img");
-        flag_img.src = "flag.png";
-        flag_img.setAttribute("flag", "true");
-        event.target.setAttribute("flag", "true");
-    
-        event.target.appendChild(flag_img);
-        if (game_won()) {
-            finished(true);
+    if (!game_finished){
+        if (event.target.getAttribute("flag") == null) {
+            var flag_img = document.createElement("img");
+            flag_img.src = "flag.png";
+            flag_img.setAttribute("flag", "true");
+            event.target.setAttribute("flag", "true");
+        
+            event.target.appendChild(flag_img);
+            if (game_won()) {
+                finished(true);
+            }
+        } else {
+            event.target.parentNode.removeAttribute("flag");
+            event.target.parentNode.removeChild(event.target);
         }
-    } else {
-        event.target.parentNode.removeAttribute("flag");
-        event.target.parentNode.removeChild(event.target);
     }
 
     return false;
@@ -266,29 +270,32 @@ function finished(won) {
     var game_finished_text = document.createElement("p");
     
     if (won) {
-        // Change background color of revealed squares to green
+        game_finished_text.innerHTML = "YOU WIN!";
+
+        // Change background color of revealed squares to green and display you won message
         all_revealed_background_green();
-        // Display message that player won
-        alert("YOU WIN!");
     } else {
-        // Display all the remaining mines
+        game_finished_text.innerHTML = "YOU LOSE!";
+
+        // Display all the remaining mines and lost message
         display_all_mines();
-        // Display message that player lost
-        alert("YOU LOSE!");
     }
+
+    game_finished_text.classList.add("game_txt");
+    display_board.appendChild(game_finished_text);
 }
 
 function all_revealed_background_green() {
+    // Go through the list of revealed buttons and change their background
     for (var i = 0; i < revealed_buttons.length; i++) {
-        revealed_buttons[i].style.background = "green";
+        revealed_buttons[i].style.background = "#70db70";
     }
 }
 
 function display_all_mines() {
+    // Go through the mineposition list from board and adding bomb image into all of them
     for (var i = 0; i < board.minePositions.length; i++) {
         var button = document.getElementById(board.minePositions[i][0] + "," + board.minePositions[i][1]);
-        if (!button.innerHTML) {
-            display_mine(button);
-        }
+        display_mine(button);
     }
 }

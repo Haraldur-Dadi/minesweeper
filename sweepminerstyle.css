@@ -13,7 +13,7 @@ main {
 }
 
 #display_board {
-    margin: 0;
+    margin-top: 2em;
     position: absolute;
     top: 50%;
     left: 50%;
@@ -53,12 +53,12 @@ main {
 .game_txt {
     display: initial;
     position: absolute;
-    top: 50%;
+    top: -25px;
     left: 50%;
     transform: translate(-50%, -50%);
 
     margin: 0;
-    width: 100px;
+    width: 300px;
 
     font-size: 28px;
     font-weight: bold;
