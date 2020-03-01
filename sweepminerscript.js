@@ -4,11 +4,13 @@ var mines_nr = 0;
 
 var display_board = null;
 var board = null;
-var board_buttons = [];
+var board_buttons = null;
 
 var game_finished;
 
 window.onload = function () {
+    display_board = document.getElementById("display_board");
+
     generate_btn = document.getElementById("generate_button");
     generate_btn.addEventListener("click", function() { generate_board_get_input_numbers() });
 };
@@ -55,6 +57,8 @@ function generate_board_get_board() {
         // If the post request failed, server unavailable or erroeous
         .catch(function (error) {
             console.log(error);
+            var err_board = {minePositions:[[1,3],[3,0],[4,2],[4,5],[4,7],[6,9],[7,7],[8,9],[9,3],[9,9]], rows: 10, cols: 10, mines: 10};
+            board = err_board;
         })
         .then(function() {
             print_board();
@@ -64,48 +68,46 @@ function generate_board_get_board() {
 function print_board() {
     display_board = document.getElementById("display_board");
 
-    // First clear board
+    // First clear board and revealed squares
     display_board.innerHTML = "";
-    board_buttons = [];
+    revealed_buttons = [];
 
     // Set the width of the board to the nr of columns
-    display_board.style.setProperty('grid-template-columns', 'repeat(' + cols_nr + ', 40px)');
+    display_board.style.setProperty('grid-template-columns', 'repeat(' + cols_nr + ', 35px)');
 
     // Loop through rows
     for (var y = 0; y < rows_nr; y++) {
         // Loop through columns creating a button each time that make up the board
         for (var x = 0; x < cols_nr; x++) {
             var board_btn = document.createElement("button");
-            board_btn.classList.add("board_btn");
             board_btn.id = y + "," + x;
-            
-            board_btn.addEventListener("click", board_click);
+            ("click", function() { generate_board_get_input_numbers() });
+            board_btn.addEventListener("click", function() { check_button(this); } );
             board_btn.oncontextmenu = function() {return display_flag();};
 
             // Add the child to the inner html of the board
             display_board.appendChild(board_btn);
-            board_buttons.push(board_btn);
         }
     }
 
     main = document.getElementById("main");
     main.style.height = 40 * cols_nr + 'px';
+    
+    assign_mines();
 }
 
-function board_click() {
-    if (!game_finished) {
-        if (check_if_mine_hit(event.target.id.split(","))) {
-            display_mine(event.target);
-            finished(false);
-        } else {
-            display_standard(event.target);
-        }
+function assign_mines() {
+    /* Goes through the mines list and assigns attribute to buttons that should contain mines */
+    for (var i=0; i < board.minePositions.length; i++) {
+        btn = document.getElementById(board.minePositions[i][0] + "," + board.minePositions[i][1]);
+        btn.setAttribute("mine","true");
     }
 }
 
 function display_mine(button) {
-    button.disabled = true;
     // Display mine
+    button.disabled = true;
+
     var mine_img = document.createElement("img");
     mine_img.src = "bomb.png";
 
@@ -113,24 +115,19 @@ function display_mine(button) {
     button.appendChild(mine_img);
 }
 
-function display_standard(button) {
-    board_buttons.splice(board_buttons.indexOf(button), 1);
-    button.disabled = true;
-    button.style.background = "#bfbfbf";
-    check_button(button);
-}
-
 function display_flag() {
-    if (event.target.id != "flag") {
+    if (event.target.getAttribute("flag") == null) {
         var flag_img = document.createElement("img");
         flag_img.src = "flag.png";
-        flag_img.id = "flag";
+        flag_img.setAttribute("flag", "true");
+        event.target.setAttribute("flag", "true");
     
         event.target.appendChild(flag_img);
         if (game_won()) {
             finished(true);
         }
     } else {
+        event.target.parentNode.removeAttribute("flag");
         event.target.parentNode.removeChild(event.target);
     }
 
@@ -138,137 +135,127 @@ function display_flag() {
 }
 
 function display_number_mines_near(button, number_mines_near) {
-    if (number_mines_near > 0) {
-        button.disabled = true;
+    button.disabled = true;
 
-        var number_text = document.createElement("p");
-        number_text.innerHTML = number_mines_near;
-        button.appendChild(number_text);
+    var number_text = document.createElement("p");
+    number_text.innerHTML = number_mines_near;
+    button.appendChild(number_text);
 
-        if (number_mines_near == 1) {
-            button.style.color = "blue";
-        } else if (number_mines_near == 2) {
-            button.style.color = "green";
-        } else {
-            button.style.color = "red";
-        }
+    if (number_mines_near == 1) {
+        button.style.color = "blue";
+    } else if (number_mines_near == 2) {
+        button.style.color = "green";
+    } else {
+        button.style.color = "red";
     }
 }
 
 function check_button(button) {
-    var button_position = button.id.split(",");
+    if (!game_finished){
+        button.disabled = true;
 
-    var pos_to_check = [];
-    var buttons_to_check = [];
+        // Check if we hit a mine
+        if (button.getAttribute("mine") == "true") {
+            finished(false);
+            return;
+        }
+
+        revealed_buttons.push(button);
+        button.style.background = "#bfbfbf";
+
+        var button_position = button.id.split(",");
+        var buttons_to_check = [];
+        var buttons_to_call = [];
     
-    var buttons_to_call = [];
-    var pos_to_call = [];
+        // (0, -1)
+        var left_pos = Number(button_position[1]) - 1;
+        // (-1, 0)
+        var above_pos = Number(button_position[0]) - 1;
+        // (0, 1)
+        var right_pos = Number(button_position[1]) + 1;
+        // (1, 0)
+        var bottom_pos = Number(button_position[0]) + 1;
 
-    // (0, -1)
-    var left_pos = Number(button_position[1]) - 1;
-    // (-1, 0)
-    var above_pos = Number(button_position[0]) - 1;
-    // (0, 1)
-    var right_pos = Number(button_position[1]) + 1;
-    // (1, 0)
-    var bottom_pos = Number(button_position[0]) + 1;
+        // Check above (-1, 0) 
+        if (above_pos >= 0) {
+            buttons_to_check.push(document.getElementById(above_pos + "," + button_position[1]));
+            // Check above left  (-1, -1)
+            if (left_pos >= 0) {
+                buttons_to_check.push(document.getElementById(above_pos + "," + left_pos));
+            }
+            // Check above right (-1, +1)
+            if (right_pos >= 0 && right_pos < board.cols) {
+                buttons_to_check.push(document.getElementById(above_pos + "," + right_pos));
+            }
+        }
 
-    // Check above (-1, 0) 
-    if (above_pos >= 0) {
-        buttons_to_check.push(document.getElementById(above_pos + "," + button_position[1]));
-        pos_to_check.push([above_pos, button_position[1]]);
-        
-        // Check above left  (-1, -1)
+        // Check below (+1, 0)
+        if (bottom_pos < board.rows) {
+            buttons_to_check.push(document.getElementById(bottom_pos + "," + button_position[1]));
+            // Check bottom right (+1, +1) 
+            if (right_pos >= 0 && right_pos < board.cols) {
+                buttons_to_check.push(document.getElementById(bottom_pos + "," + right_pos));
+            }
+            // Check bottom left (+1, -1)
+            if (left_pos >= 0) {
+                buttons_to_check.push(document.getElementById(bottom_pos + "," + left_pos));
+            }
+        }
+
+        // Check left (0, -1)
         if (left_pos >= 0) {
-            buttons_to_check.push(document.getElementById(above_pos + "," + left_pos));
-            pos_to_check.push([above_pos, left_pos]);
+            buttons_to_check.push(document.getElementById(button_position[0] + "," + left_pos));
         }
 
-        // Check above right (-1, +1)
-        if (right_pos >= 0 && right_pos < cols_nr) {
-            buttons_to_check.push(document.getElementById(above_pos + "," + right_pos));
-            pos_to_check.push([above_pos, right_pos]);
-        }
-    }
-
-    // Check below (+1, 0)
-    if (bottom_pos < rows_nr) {
-        buttons_to_check.push(document.getElementById(bottom_pos + "," + button_position[1]));
-        pos_to_check.push([bottom_pos, button_position[1]]);
-        
-        // Check bottom right (+1, +1) 
-        if (right_pos >= 0 && right_pos < cols_nr) {
-            buttons_to_check.push(document.getElementById(bottom_pos + "," + right_pos));
-            pos_to_check.push([bottom_pos, right_pos]);
+        // Check right (0, +1)
+        if (right_pos < board.cols) {
+            buttons_to_check.push(document.getElementById(button_position[0] + "," + right_pos));
         }
 
-        // Check bottom left (+1, -1)
-        if (left_pos >= 0) {
-            buttons_to_check.push(document.getElementById(bottom_pos + "," + left_pos));
-            pos_to_check.push([bottom_pos, left_pos]);
-        }
-    }
-
-    // Check left (0, -1)
-    if (left_pos >= 0) {
-        buttons_to_check.push(document.getElementById(button_position[0] + "," + left_pos));
-        pos_to_check.push([button_position[0], left_pos]);
-    }
-
-    // Check right (0, +1)
-    if (right_pos < cols_nr) {
-        buttons_to_check.push(document.getElementById(button_position[0] + "," + right_pos));
-        pos_to_check.push([button_position[0], right_pos]);
-    }
-
-    var mines_near_counter = 0;
-    for (var i = 0; i < pos_to_check.length; i++) {
-        if (!buttons_to_check[i].disabled) {
-            if (check_if_mine_hit(pos_to_check[i])) {
+        // Filter out flagged and mine buttons and count mines near
+        var mines_near_counter = 0;
+        for (var i = 0; i < buttons_to_check.length; i++) {
+            if (buttons_to_check[i].getAttribute("mine")) {
                 mines_near_counter += 1;
-            } else {
-                pos_to_call.push(pos_to_check[i]);
+            }
+            else if (!buttons_to_check[i].getAttribute("flag")) {
                 buttons_to_call.push(buttons_to_check[i]);
             }
         }
-    }
 
-    if (game_won()) {
-        finished(true);
-    } else if (mines_near_counter > 0) {
-        display_number_mines_near(button, mines_near_counter);
-    } else {
-        display_number_mines_near(button, mines_near_counter);
-        for (var i = 0; i < pos_to_call.length; i++) {
-            display_standard(buttons_to_call[i], pos_to_call[i]);
+        if (game_won()) {
+            finished(true);
+        } else if (mines_near_counter > 0) {
+            display_number_mines_near(button, mines_near_counter);
+        } else {
+            for (var i = 0; i < buttons_to_call.length; i++) {
+                if (!buttons_to_call[i].disabled) {
+                    check_button(buttons_to_call[i]);
+                }
+            }
         }
     }
-}
-
-function check_if_mine_hit(position_to_check) {
-    // Loop through the positions of mines and check if we hit it
-    for (var i = 0; i < board.minePositions.length; i++) {
-        // Array value comparison
-        if (board.minePositions[i][0] == position_to_check[0] && board.minePositions[i][1] == position_to_check[1]) {
-            return true;
-        }
-    }
-    return false;
 }
 
 function game_won() {
+    /* Check if we have flagged all mines
+       and no active buttons left*/
     won = true;
+    board_buttons = display_board.children;
     for (var i = 0; i < board_buttons.length; i++) {
-        // Check if button does contain flag
-        if (board_buttons[i].innerHTML != "") {
-            console.log(2);
-            // Contains flag but there is no bomb under it
-            if (!check_if_mine_hit(board_buttons[i].id.split(","))) {
-                console.log(3);
+        if (!board_buttons[i].disabled) {
+            // If there is a mine that has not been flagged
+            if (!board_buttons[i].getAttribute("flag") && board_buttons[i].getAttribute("mine")) {
                 won = false;
             }
-        } else {
-            won = false;
+            // If there is a button that has been flagged but contains no mine 
+            else if (board_buttons[i].getAttribute("flag") && !board_buttons[i].getAttribute("mine")) {
+                won = false;
+            }
+            // If there is a button that has no flag and no bomb (still active)
+            else if (!board_buttons[i].getAttribute("flag") && !board_buttons[i].getAttribute("mine")){
+                won = false;
+            }
         }
     }
     return won;
@@ -279,23 +266,28 @@ function finished(won) {
     var game_finished_text = document.createElement("p");
     
     if (won) {
-        game_finished_text.innerHTML = "YOU WIN!";
+        // Change background color of revealed squares to green
+        all_revealed_background_green();
+        // Display message that player won
+        alert("YOU WIN!");
     } else {
-        game_finished_text.innerHTML = "YOU LOSE!";
+        // Display all the remaining mines
+        display_all_mines();
+        // Display message that player lost
+        alert("YOU LOSE!");
     }
+}
 
-    game_finished_text.classList.add("game_txt");
-    game_finished_text.style.left = (cols_nr * 40) / 2 + "px";
-
-    // Display all the remaining mines and game_finished_text
-    display_all_mines();
-    display_board.appendChild(game_finished_text);
+function all_revealed_background_green() {
+    for (var i = 0; i < revealed_buttons.length; i++) {
+        revealed_buttons[i].style.background = "green";
+    }
 }
 
 function display_all_mines() {
     for (var i = 0; i < board.minePositions.length; i++) {
         var button = document.getElementById(board.minePositions[i][0] + "," + board.minePositions[i][1]);
-        if (!button.disabled) {
+        if (!button.innerHTML) {
             display_mine(button);
         }
     }

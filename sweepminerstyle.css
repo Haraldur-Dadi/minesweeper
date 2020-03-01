@@ -3,6 +3,10 @@ body {
     text-align: center;
 }
 
+p {
+    margin: auto;
+}
+
 main {
     position: relative;
     margin-top: 2em;
@@ -16,16 +20,14 @@ main {
     transform: translate(-50%, -50%);
 
     display: grid;
-    grid-template-columns: repeat(1, 40px);
-    
-    margin: auto;
+    grid-template-columns: repeat(1, 35px);
 }
 
-.board_btn {
+#display_board button {
     padding: 0px;
 
-    height: 40px;
-    width: 40px;
+    height: 35px;
+    width: 35px;
 
     background-color: #D3D3D3;
 
@@ -33,14 +35,19 @@ main {
     outline: none;
 
     border-left: 3px solid #e6e6e6;
-    border-top:  3px solid #e6e6e6; /*#D6D8DB*/
+    border-top:  3px solid #e6e6e6;
     border-right: 3px solid #8E8E8E;
     border-bottom: 3px solid #8E8E8E;
 }
 
-.board_btn img {
-    height: 34px;
-    width: 34px;
+#display_board img {
+    height: 29px;
+    width: 29px;
+}
+
+.mine {
+    background-image: url("bomb.png");
+    background-color: tomato;
 }
 
 .game_txt {
