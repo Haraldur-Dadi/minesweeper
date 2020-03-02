@@ -56,7 +56,6 @@ function generate_board_get_board() {
         })
         // If the post request failed, server unavailable or erroeous
         .catch(function (error) {
-            console.log(error);
             var err_board = {minePositions:[[1,3],[3,0],[4,2],[4,5],[4,7],[6,9],[7,7],[8,9],[9,3],[9,9]], rows: 10, cols: 10, mines: 10};
             board = err_board;
         })
@@ -73,12 +72,12 @@ function print_board() {
     revealed_buttons = [];
 
     // Set the width of the board to the nr of columns
-    display_board.style.setProperty('grid-template-columns', 'repeat(' + cols_nr + ', 35px)');
+    display_board.style.setProperty('grid-template-columns', 'repeat(' + board.rows + ', 35px)');
 
     // Loop through rows
-    for (var y = 0; y < rows_nr; y++) {
+    for (var y = 0; y < board.rows; y++) {
         // Loop through columns creating a button each time that make up the board
-        for (var x = 0; x < cols_nr; x++) {
+        for (var x = 0; x < board.cols; x++) {
             var board_btn = document.createElement("button");
             board_btn.id = y + "," + x;
             ("click", function() { generate_board_get_input_numbers() });
@@ -91,7 +90,7 @@ function print_board() {
     }
 
     var main = document.getElementById("main");
-    main.style.height = 40 * cols_nr + 'px';
+    main.style.height = 40 * board.rows + 'px';
     
     assign_mines();
 }
