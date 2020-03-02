@@ -1,37 +1,30 @@
-var rows_nr = 0;
-var cols_nr = 0;
-var mines_nr = 0;
-
 var display_board = null;
 var board = null;
-var board_buttons = null;
-
 var game_finished;
 
 window.onload = function () {
     display_board = document.getElementById("display_board");
 
-    generate_btn = document.getElementById("generate_button");
-    generate_btn.addEventListener("click", function() { generate_board_get_input_numbers() });
+    document.getElementById("generate_button").addEventListener("click", function() { generate_board_get_input_numbers() });
 };
 
 function generate_board_get_input_numbers() {
     game_finished = false;
 
-    rows_nr = document.getElementById("rows_input").value;
-    cols_nr = document.getElementById("cols_input").value;
-    mines_nr = document.getElementById("mines_input").value;
+    var rows_nr = document.getElementById("rows_input").value;
+    var cols_nr = document.getElementById("cols_input").value;
+    var mines_nr = document.getElementById("mines_input").value;
 
-    if (!valid_input()) {
+    if (!valid_input(rows_nr, cols_nr, mines_nr)) {
         rows_nr = 10;
         cols_nr = 10;
         mines_nr = 10;
     }
 
-    generate_board_get_board();
+    generate_board_get_board(rows_nr, cols_nr, mines_nr);
 }
 
-function valid_input() {
+function valid_input(rows_nr, cols_nr, mines_nr) {
     if (rows_nr < 1 || cols_nr < 1 || mines_nr < 1) {
         return false;
     } else if (rows_nr > 40 || cols_nr > 40) {
@@ -45,7 +38,7 @@ function valid_input() {
     return true;
 }
 
-function generate_board_get_board() {
+function generate_board_get_board(rows_nr, cols_nr, mines_nr) {
     // The URL to which we will send the request
     var url = 'https://veff213-minesweeper.herokuapp.com/api/v1/minesweeper';
 
@@ -56,8 +49,7 @@ function generate_board_get_board() {
         })
         // If the post request failed, server unavailable or erroeous
         .catch(function (error) {
-            var err_board = {minePositions:[[1,3],[3,0],[4,2],[4,5],[4,7],[6,9],[7,7],[8,9],[9,3],[9,9]], rows: 10, cols: 10, mines: 10};
-            board = err_board;
+            board = {minePositions:[[1,3],[3,0],[4,2],[4,5],[4,7],[6,9],[7,7],[8,9],[9,3],[9,9]], rows: 10, cols: 10, mines: 10};
         })
         .then(function() {
             print_board();
@@ -65,6 +57,7 @@ function generate_board_get_board() {
 }
 
 function print_board() {
+    // Get the board
     display_board = document.getElementById("display_board");
 
     // First clear board and revealed squares
@@ -72,15 +65,14 @@ function print_board() {
     revealed_buttons = [];
 
     // Set the width of the board to the nr of columns
-    display_board.style.setProperty('grid-template-columns', 'repeat(' + board.rows + ', 35px)');
+    display_board.style.setProperty('grid-template-columns', 'repeat(' + board.cols + ', 35px)');
 
     // Loop through rows
     for (var y = 0; y < board.rows; y++) {
         // Loop through columns creating a button each time that make up the board
         for (var x = 0; x < board.cols; x++) {
             var board_btn = document.createElement("button");
-            board_btn.id = y + "," + x;
-            ("click", function() { generate_board_get_input_numbers() });
+            board_btn.id = [y , x];
             board_btn.addEventListener("click", function() { check_button(this); } );
             board_btn.oncontextmenu = function() {return display_flag();};
 
@@ -89,8 +81,7 @@ function print_board() {
         }
     }
 
-    var main = document.getElementById("main");
-    main.style.height = 40 * board.rows + 'px';
+    document.getElementById("main").style.height = 40 * board.rows + 'px';
     
     assign_mines();
 }
@@ -98,18 +89,18 @@ function print_board() {
 function assign_mines() {
     /* Goes through the mines list and assigns attribute to buttons that should contain mines */
     for (var i=0; i < board.minePositions.length; i++) {
-        btn = document.getElementById(board.minePositions[i][0] + "," + board.minePositions[i][1]);
+        btn = document.getElementById(board.minePositions[i]);
         btn.setAttribute("mine","true");
     }
 }
 
 function display_mine(button) {
-    // Display mine
     button.disabled = true;
 
     // Clear innerhtml if button was already flagged
     button.innerHTML = "";
 
+    // Display mine
     var mine_img = document.createElement("img");
     mine_img.src = "bomb.png";
     button.style.background = "tomato";
@@ -138,8 +129,6 @@ function display_flag() {
 }
 
 function display_number_mines_near(button, number_mines_near) {
-    button.disabled = true;
-
     var number_text = document.createElement("p");
     number_text.innerHTML = number_mines_near;
     button.appendChild(number_text);
@@ -271,12 +260,12 @@ function finished(won) {
     if (won) {
         game_finished_text.innerHTML = "YOU WIN!";
 
-        // Change background color of revealed squares to green and display you won message
+        // Change background color of revealed squares to green
         all_revealed_background_green();
     } else {
         game_finished_text.innerHTML = "YOU LOSE!";
 
-        // Display all the remaining mines and lost message
+        // Display all the remaining mines
         display_all_mines();
     }
 
